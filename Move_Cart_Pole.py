@@ -5,8 +5,8 @@ from isaacgym import gymapi, gymutil
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
 
-model_file = r"/home/tjmccue/Documents/Thesis/Isaac Gym Docs/isaacgym/assets/urdf/"
-model_file_name = r"cartpole.urdf"
+model_file = r"/home/tjmccue/Documents/Thesis/Cart and Pendulum Model/URDF Model v2/Cart_and_Pendelum_Assembly/urdf/"
+model_file_name = r"Cart and Pendelum Assembly.urdf"
 
 gym = gymapi.acquire_gym()
 
@@ -37,6 +37,10 @@ if sim is None:
 asset_opts = gymapi.AssetOptions()
 asset_opts.fix_base_link = True
 asset_opts.use_mesh_materials = True
+asset_opts.collapse_fixed_joints = True
+asset_opts.default_dof_drive_mode = gymapi.DOF_MODE_POS
+asset_opts.thickness = 0.001
+
 
 asset = gym.load_asset(sim, model_file, model_file_name, asset_opts)
 
@@ -82,6 +86,7 @@ env_upper = gymapi.Vec3(5, 5, 5)
 environ = gym.create_env(sim, env_lower, env_upper, 1)
 
 pose = gymapi.Transform()
+pose.p = gymapi.Vec3(0.0, 2, 0.0)
 actor_handle = gym.create_actor(environ, asset, pose)
 
 gym.set_actor_dof_states(environ, actor_handle, joint_state, gymapi.STATE_ALL)
