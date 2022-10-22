@@ -30,7 +30,7 @@ plane_parameters = gymapi.PlaneParams()
 gym.add_ground(sim, plane_parameters)
 
 camera = gym.create_viewer(sim, gymapi.CameraProperties())
-if sim is None:
+if camera is None:
     print("Couldn't create camera")
     quit()
 
@@ -70,23 +70,24 @@ for i in range(num_joints):
             defaults[i] = up_lim[i]
     else:
         if joint_types[i] == gymapi.DOF_ROTATION:
-            low_lim[i] = -math.pi
-            up_lim[i] = math.pi
+            low_lim[i] = -math.pi/2
+            up_lim[i] = math.pi/2
         elif joint_types[i] == gymapi.DOF_TRANSLATION:
-            low_lim[i] = -1.0
-            up_lim[i] = 1.0
+            low_lim[i] = -0.5
+            up_lim[i] = 0.5
     joint_pos[i] = defaults[i]
     if joint_types[i] == gymapi.DOF_ROTATION:
-        speeds[i] = 0.25 * clamp(2 * (up_lim[i] - low_lim[i]), 0.25 * math.pi, 3.0 * math.pi)
+        speeds[i] = 0.5 * clamp(2 * (up_lim[i] - low_lim[i]), 0.25 * math.pi, 3.0 * math.pi)
     else:
-        speeds[i] = 0.25 * clamp(2 * (up_lim[i] - low_lim[i]), 0.1, 5.0)
+        speeds[i] = 0.5 * clamp(2 * (up_lim[i] - low_lim[i]), 0.1, 5.0)
 
-env_lower = gymapi.Vec3(-5, 0.0, -5)
-env_upper = gymapi.Vec3(5, 5, 5)
+env_lower = gymapi.Vec3(-1, 0.0, -1)
+env_upper = gymapi.Vec3(1, 1, 1)
 environ = gym.create_env(sim, env_lower, env_upper, 1)
 
 pose = gymapi.Transform()
-pose.p = gymapi.Vec3(0.0, 2, 0.0)
+pose.p = gymapi.Vec3(0.0, 0, 0.0)
+pose.r = gymapi.Quat(0.7071, 0, 0, -0.7071)
 actor_handle = gym.create_actor(environ, asset, pose)
 
 gym.set_actor_dof_states(environ, actor_handle, joint_state, gymapi.STATE_ALL)
