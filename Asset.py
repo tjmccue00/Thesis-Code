@@ -5,12 +5,12 @@ from isaacgym import gymapi, gymutil
 
 class Asset():
 
-    def __init__(self, root_file, asset_name, sim, gym,
-                fix_base = True,
-                mesh_materials = True,
-                collapse_fixed = True,
-                thickness = 0.001,
-                drive_mode =  = gymapi.DOF_MODE_POS):
+    def __init__ (self, root_file, asset_name, sim, gym,\
+                fix_base = True,\
+                mesh_materials = True,\
+                collapse_fixed = True,\
+                thickness = 0.001,\
+                drive_mode = gymapi.DOF_MODE_POS):
 
             self.root_file = root_file
             self.asset_name = asset_name

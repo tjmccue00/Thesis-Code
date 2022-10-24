@@ -4,13 +4,13 @@ from isaacgym import gymapi, gymutil
 
 class Simulation():
 
-    def __init__(self, gym,
-                dt = 1.0/60
-                use_GPU = True
-                GPU_pipeline = False
-                solver_type = 1
-                sim_type = gymapi.SimType.SIM_PHYSX
-                num_position_iterations = 6
+    def __init__(self, gym,\
+                dt = 1.0/60,\
+                use_GPU = True,\
+                GPU_pipeline = False,\
+                solver_type = 1,\
+                sim_type = gymapi.SimType.SIM_PHYSX,\
+                num_position_iterations = 6,\
                 num_velocity_iterations = 1):
 
         self.dt = dt
