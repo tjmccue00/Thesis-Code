@@ -21,8 +21,10 @@ class Simulation():
         self.num_vel_iters = num_velocity_iterations
         self.sim_type = sim_type
         self.sim = None
+        self.camera = None
 
     def initialize(self):
+
             sim_params = gymapi.SimParams()
             sim_params.physx.solver_type = self.solver_type
             sim_params.physx.num_position_iterations = self.num_pos_iters
@@ -31,3 +33,15 @@ class Simulation():
             sim_params.use_gpu_pipeline = self.GPU_pipe
 
             self.sim = (self.gym).create_sim(0, 0, self.sim_type, sim_params)
+
+            self.camera = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
+
+    def create_ground(self):
+
+        plane_parameters = gymapi.PlaneParams()
+        self.gym.add_ground(self.sim, plane_parameters)
+
+    def end_sim(self):
+
+        self.gym.destroy_viewer(self.camera)
+        self.gym.destroy_sim(self.sim)

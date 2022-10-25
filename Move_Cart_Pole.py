@@ -41,7 +41,6 @@ asset_opts.collapse_fixed_joints = True
 asset_opts.default_dof_drive_mode = gymapi.DOF_MODE_POS
 asset_opts.thickness = 0.001
 
-
 asset = gym.load_asset(sim, model_file, model_file_name, asset_opts)
 
 joint_names = gym.get_asset_dof_names(asset)
