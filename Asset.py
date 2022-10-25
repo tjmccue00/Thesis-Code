@@ -7,13 +7,16 @@ def clamp(x, min_value, max_value):
 
 class Asset():
 
-    def __init__ (self, root_file, asset_name, sim, gym,\
+    def __init__ (self, root_file, asset_name, sim, gym, name,\
                 fix_base = True,\
                 mesh_materials = True,\
                 collapse_fixed = True,\
                 thickness = 0.001,\
-                drive_mode = gymapi.DOF_MODE_POS):
+                drive_mode = gymapi.DOF_MODE_POS,\
+                rotat_t = [0,0,0],\
+                trans_t = [0,0,0]):
 
+            self.name = name
             self.root_file = root_file
             self.asset_name = asset_name
             self.sim = sim
@@ -33,6 +36,8 @@ class Asset():
             self.low_lim = []
             self.up_lim = []
             self.defaults = []
+            self.rotat_t = rotat_t
+            self.trans_t = trans_t
 
     def instantiate(self):
 
