@@ -31,7 +31,7 @@ class Asset():
             self.joint_names = []
             self.joint_props = []
             self.num_joints = 0
-            self.joint_states = []
+            self.joint_state = []
             self.has_lim = []
             self.low_lim = []
             self.up_lim = []
@@ -39,7 +39,7 @@ class Asset():
             self.rotat_t = rotat_t
             self.trans_t = trans_t
 
-    def instantiate(self):
+    def initialize(self):
 
         asset_opts = gymapi.AssetOptions()
         asset_opts.fix_base_link = self.fix_base
@@ -48,17 +48,17 @@ class Asset():
         asset_opts.default_dof_drive_mode = self.drive_mode
         asset_opts.thickness = self.th
 
-        self.asset = (self.gym).load_asset(self.sim, self.root_file, self.asset_name, asset_opts)
+        self.asset = self.gym.load_asset(self.sim.sim, self.root_file, self.asset_name, asset_opts)
 
         self.joint_names = self.gym.get_asset_dof_names(self.asset)
         self.joint_props = self.gym.get_asset_dof_properties(self.asset)
         self.num_joints = self.gym.get_asset_dof_count(self.asset)
         self.joint_state = np.zeros(self.num_joints, dtype=gymapi.DofState.dtype)
-        self.joint_types = [self.gym.get_asset_dof_type(self.ssset, i) for i in range(self.num_joints)]
+        self.joint_types = [self.gym.get_asset_dof_type(self.asset, i) for i in range(self.num_joints)]
         self.joint_pos = self.joint_state['pos']
         self.has_lim = self.joint_props['hasLimits']
         self.low_lim = self.joint_props['lower']
-        self.up_lim = self.foint_props['upper']
+        self.up_lim = self.joint_props['upper']
 
         self.defaults = np.zeros(self.num_joints)
 

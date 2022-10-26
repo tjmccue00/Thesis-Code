@@ -5,7 +5,7 @@ from isaacgym import gymapi, gymutil
 def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
 
-model_file = r"/home/tjmccue/Documents/Thesis/Cart and Pendulum Model/URDF Model v2/Cart_and_Pendelum_Assembly/urdf/"
+model_file = r"/home/tjmccue/Documents/Thesis/Cart and Pendulum Model/URDF Model v2/Cart and Pendelum Assembly/urdf"
 model_file_name = r"Cart and Pendelum Assembly.urdf"
 
 gym = gymapi.acquire_gym()
@@ -90,6 +90,7 @@ pose.r = gymapi.Quat(0.7071, 0, 0, -0.7071)
 actor_handle = gym.create_actor(environ, asset, pose)
 
 gym.set_actor_dof_states(environ, actor_handle, joint_state, gymapi.STATE_ALL)
+print(joint_state)
 
 ANIM_LOWER = 1
 ANIM_UPPER = 2

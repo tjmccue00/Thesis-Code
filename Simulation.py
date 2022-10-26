@@ -13,6 +13,7 @@ class Simulation():
                 num_position_iterations = 6,\
                 num_velocity_iterations = 1):
 
+        self.gym = gym
         self.dt = dt
         self.use_GPU = use_GPU
         self.GPU_pipe = GPU_pipeline
@@ -32,7 +33,7 @@ class Simulation():
             sim_params.physx.use_gpu = self.use_GPU
             sim_params.use_gpu_pipeline = self.GPU_pipe
 
-            self.sim = (self.gym).create_sim(0, 0, self.sim_type, sim_params)
+            self.sim = self.gym.create_sim(0, 0, self.sim_type, sim_params)
 
             self.camera = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
 
@@ -45,3 +46,6 @@ class Simulation():
 
         self.gym.destroy_viewer(self.camera)
         self.gym.destroy_sim(self.sim)
+
+    def get_Camera(self):
+        return self.camera
