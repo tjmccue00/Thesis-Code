@@ -65,3 +65,7 @@ class Environment():
 
     def set_Sync(self, val):
         self.sync_time = val
+
+    def set_actor_dof_states(self, dof_modes):
+        for i in range(len(self.actors)):
+            print()

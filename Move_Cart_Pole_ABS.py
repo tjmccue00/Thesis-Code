@@ -19,7 +19,7 @@ asset = ast.Asset(model_file, model_file_name, sim, gym, "Cart-Pole", rotat_t=[0
 asset.initialize()
 asset.configure_joint_lims()
 
-env = en.Environment(asset, sim, gym, 1, 1, 2)
+env = en.Environment(asset, sim, gym, 1, 1, 5)
 env.initialize()
 
 env.set_Render(True)

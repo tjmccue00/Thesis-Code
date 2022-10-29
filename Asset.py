@@ -81,3 +81,12 @@ class Asset():
                    self.low_lim[i] = -0.5
                    self.up_lim[i] = 0.5
             self.joint_pos[i] = self.defaults[i]
+
+    def print_joint_names(self):
+        for i in range(len(self.joint_names)):
+            print(self.joint_names[i])
+
+    def get_joint_names(self):
+        return self.joint_names
+
+
