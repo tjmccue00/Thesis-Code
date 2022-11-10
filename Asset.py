@@ -47,6 +47,7 @@ class Asset():
         asset_opts.collapse_fixed_joints = self.collapse_fixed
         asset_opts.default_dof_drive_mode = self.drive_mode
         asset_opts.thickness = self.th
+        asset_opts.vhacd_enabled = True
 
         self.asset = self.gym.load_asset(self.sim.sim, self.root_file, self.asset_name, asset_opts)
 

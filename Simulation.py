@@ -10,8 +10,8 @@ class Simulation():
                 GPU_pipeline = False,\
                 solver_type = 1,\
                 sim_type = gymapi.SimType.SIM_PHYSX,\
-                num_position_iterations = 6,\
-                num_velocity_iterations = 1):
+                num_position_iterations = 9,\
+                num_velocity_iterations = 4):
 
         self.gym = gym
         self.dt = dt
