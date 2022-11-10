@@ -39,7 +39,7 @@ cam_target = gymapi.Vec3(0, 0, 0)
 gym.viewer_camera_look_at(sim.get_Camera(), None, cam_pos, cam_target)
 target = 0
 counter = 0
-
+dat_rec = False
 while not gym.query_viewer_has_closed(sim.get_Camera()):
 
     gym.simulate(sim.sim)
@@ -53,9 +53,10 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
     pos = gym.get_dof_position(env.envs[0], joint_pole)
     print("Target: ",round(target,2) , "Actual: ", round(pos,2))
     env.apply_force(joint_pole, -(pos-target) * 5)
-    if counter % 10 == 0:
-        with open("pend_txt.txt", "a") as f:
-            f.write(str(round(target,2)) + "," + str(round(pos,2)) + "\n")
+    if dat_rec:
+        if counter % 10 == 0:
+            with open("pend_txt.txt", "a") as f:
+                f.write(str(round(target,2)) + "," + str(round(pos,2)) + "\n")
 
     counter += 1
 
