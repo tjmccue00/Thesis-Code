@@ -39,8 +39,6 @@ class Environment():
             environ = self.gym.create_env(self.sim.sim, low_bound, up_bound, self.num_per_row)
             self.envs.append(environ)
 
-
-
             pose = gymapi.Transform()
             pose.p = gymapi.Vec3(self.asset.trans_t[0], self.asset.trans_t[1], self.asset.trans_t[2])
             pose.r = get_quat_from_eul(self.asset.rotat_t)
@@ -70,10 +68,10 @@ class Environment():
         props = self.gym.get_actor_dof_properties(self.envs[0], self.actors[0])
         props["driveMode"] = dof_modes
         props["stiffness"] = (5000.0, 0.0)
-        props["damping"] = (100.0, 0.0)
-        props["friction"] = (0.0, .5)
-        props["effort"] = (1000, 8)
-        props["velocity"] = (1000, 1000)
+        props["damping"] = (0.0, 0.0)
+        props["friction"] = (0.0, 0.05)
+        props["effort"] = (1000, 1000)
+        props["velocity"] = (800, 800)
         self.gym.set_actor_dof_properties(self.envs[0], self.actors[0], props)
 
     def apply_force(self, dof, force):
