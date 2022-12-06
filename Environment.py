@@ -67,9 +67,9 @@ class Environment():
     def set_actor_dof_states(self, dof_modes):
         props = self.gym.get_actor_dof_properties(self.envs[0], self.actors[0])
         props["driveMode"] = dof_modes
-        props["stiffness"] = (5000.0, 0.0)
+        props["stiffness"] = (0.0, 0.0)
         props["damping"] = (0.0, 0.0)
-        props["friction"] = (0.0, 0.05)
+        props["friction"] = (0.1, 0.0025)
         props["effort"] = (1000, 1000)
         props["velocity"] = (800, 800)
         self.gym.set_actor_dof_properties(self.envs[0], self.actors[0], props)

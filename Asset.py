@@ -42,16 +42,14 @@ class Asset():
     def initialize(self):
 
         asset_opts = gymapi.AssetOptions()
-        vhacd_para = gymapi.VhacdParams()
+        asset_opts.convex_decomposition_from_submeshes = True
         asset_opts.fix_base_link = self.fix_base
         asset_opts.use_mesh_materials = self.mesh_materials
         asset_opts.collapse_fixed_joints = self.collapse_fixed
+        asset_opts.vhacd_enabled = True
         asset_opts.default_dof_drive_mode = self.drive_mode
         asset_opts.thickness = self.th
-        asset_opts.vhacd_enabled = True
-        #vhacd_para.mode = 1
-        #vhacd_para.resolution = 1000000
-        #asset_opts.vhacd_params = vhacd_para
+        asset_opts.enable_gyroscopic_forces = True
         self.asset = self.gym.load_asset(self.sim.sim, self.root_file, self.asset_name, asset_opts)
 
         self.joint_names = self.gym.get_asset_dof_names(self.asset)
