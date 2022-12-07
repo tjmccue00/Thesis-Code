@@ -65,16 +65,17 @@ class Environment():
         self.sync_time = val
 
     def set_actor_dof_states(self, dof_modes):
-        props = self.gym.get_actor_dof_properties(self.envs[0], self.actors[0])
-        props["driveMode"] = dof_modes
-        props["stiffness"] = (0.0, 0.0)
-        props["damping"] = (0.0, 0.0)
-        props["friction"] = (0.1, 0.0025)
-        props["effort"] = (1000, 1000)
-        props["velocity"] = (800, 800)
-        self.gym.set_actor_dof_properties(self.envs[0], self.actors[0], props)
+        for i in range(len(self.envs)):
+            props = self.gym.get_actor_dof_properties(self.envs[i], self.actors[i])
+            props["driveMode"] = dof_modes
+            props["stiffness"] = (0.0, 0.0)
+            props["damping"] = (0.0, 0.0)
+            props["friction"] = (0.1, 0.0025)
+            props["effort"] = (1000, 1000)
+            props["velocity"] = (800, 800)
+            self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], props)
 
-    def apply_force(self, dof, force):
+    def apply_force(self, dof, force, actor):
         #print(dof, force)
-        boole = self.sim.gym.apply_dof_effort(self.envs[0], dof, force)
+        boole = self.sim.gym.apply_dof_effort(self.envs[actor], dof, force)
         #print(boole)

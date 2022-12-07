@@ -11,7 +11,7 @@ model_file_name = r"Cart and Pendelum Assembly.urdf"
 
 gym = gymapi.acquire_gym()
 
-sim = sm.Simulation(gym, dt=1/120)
+sim = sm.Simulation(gym, dt=1/360)
 sim.initialize()
 sim.create_ground()
 
@@ -40,7 +40,8 @@ cam_target = gymapi.Vec3(0, 0, 0)
 gym.viewer_camera_look_at(sim.get_Camera(), None, cam_pos, cam_target)
 
 counter = 0
-dat_rec = True
+dat_rec = False
+applied = False
 
 while not gym.query_viewer_has_closed(sim.get_Camera()):
 
@@ -67,7 +68,7 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
     velo = gym.get_joint_velocity(env.envs[0], joint_pole)
     velo_cart = gym.get_joint_velocity(env.envs[0], joint_cart)
     force = 250*pos+7.5*velo
-    #env.apply_force(joint_cart, force)
+    env.apply_force(joint_cart, force)
     
     print("Cart Pos: ", round(pos,2))
     print("Cart Velo: ", round(velo_cart,2))
@@ -80,12 +81,14 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
         if counter % 1 == 0:
             with open("pole_balance_no_control.txt", "a") as f:
                 f.write(data + "\n")
-        if counter == 120:
+    if keyboard.is_pressed("b"):
+        if not applied:
             env.apply_force(joint_cart, 200)
-            pass
+            applied = True
+            
 
     counter += 1
-
+    
     env.render()
 
 sim.end_sim()
