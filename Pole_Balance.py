@@ -11,7 +11,7 @@ model_file_name = r"Cart and Pendelum Assembly.urdf"
 
 gym = gymapi.acquire_gym()
 
-sim = sm.Simulation(gym)
+sim = sm.Simulation(gym, dt=1/120)
 sim.initialize()
 sim.create_ground()
 
@@ -38,9 +38,10 @@ gym.apply_dof_effort(env.envs[0], joint_cart, 0)
 cam_pos = gymapi.Vec3(0, .25, 2)
 cam_target = gymapi.Vec3(0, 0, 0)
 gym.viewer_camera_look_at(sim.get_Camera(), None, cam_pos, cam_target)
-#target = 0
+
 counter = 0
-dat_rec = False
+dat_rec = True
+
 while not gym.query_viewer_has_closed(sim.get_Camera()):
 
     gym.simulate(sim.sim)
@@ -54,29 +55,36 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
         pass
     elif keyboard.is_pressed('a'):
         env.apply_force(joint_cart, -50)
+        force_u = 1
     elif keyboard.is_pressed('d'):
         env.apply_force(joint_cart, 50)
+        force_u = 1
+    else:
+        force_u = 0
     
     cart_pos = gym.get_joint_position(env.envs[0], joint_cart)
     pos = gym.get_joint_position(env.envs[0], joint_pole)
     velo = gym.get_joint_velocity(env.envs[0], joint_pole)
     velo_cart = gym.get_joint_velocity(env.envs[0], joint_cart)
     force = 250*pos+7.5*velo
-    env.apply_force(joint_cart, force)
-    #print("Target: ",round(target,2) , "Actual: ", round(pos,2))
+    #env.apply_force(joint_cart, force)
+    
     print("Cart Pos: ", round(pos,2))
     print("Cart Velo: ", round(velo_cart,2))
     print("Pole Velo: ", round(velo,2))
     print("Force Applied: ", round(force,2))
 
-    #env.asset.joint_pos[0] -= 0.125* pos
-    #gym.set_actor_dof_states(env.envs[0], env.actors[0], asset.joint_state, gymapi.STATE_ALL)
-    #if dat_rec:
-        #if counter % 10 == 0:
-            #with open("pend_txt.txt", "a") as f:
-                #f.write(str(round(target,2)) + "," + str(round(pos,2)) + "\n")
+    data = str(round(pos,2)) + ", " + str(round(velo_cart,2)) + ", " + str(round(velo,2)) + ", " + str(round(force,2)) + ", " + str(force_u)
+    
+    if dat_rec:
+        if counter % 1 == 0:
+            with open("pole_balance_no_control.txt", "a") as f:
+                f.write(data + "\n")
+        if counter == 120:
+            env.apply_force(joint_cart, 200)
+            pass
 
-    #counter += 1
+    counter += 1
 
     env.render()
 
