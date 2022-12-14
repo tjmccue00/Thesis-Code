@@ -1,3 +1,5 @@
+from asyncio import DatagramProtocol
+from asyncio.base_futures import _future_repr_info
 import Environment as en
 import Asset as ast
 import Simulation as sm
@@ -40,7 +42,12 @@ for i in range(len(env.envs)):
     cart_joints.append(joint_cart)
     pole_joints.append(joint_pole)
 
-
+stiffness = (0.0, 0.0)
+damping = (0.0, 0.0)
+friction = (0.1, 0.0025)
+max_velo = (1000, 1000)
+max_effort = (800, 800)
+env.set_actor_dof_props(stiffness, damping, friction, max_effort, max_velo)
 
 cam_pos = gymapi.Vec3(0, .25, 2)
 cam_target = gymapi.Vec3(0, 0, 0)

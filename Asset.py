@@ -12,7 +12,7 @@ class Asset():
                 mesh_materials = True,\
                 collapse_fixed = True,\
                 thickness = 0.001,\
-                drive_mode = gymapi.DOF_MODE_POS,\
+                default_drive_mode = gymapi.DOF_MODE_POS,\
                 rotat_t = [0,0,0],\
                 trans_t = [0,0,0]):
 
@@ -25,7 +25,8 @@ class Asset():
             self.mesh_materials = mesh_materials
             self.collapse_fixed = collapse_fixed
             self.th = thickness
-            self.drive_mode = drive_mode
+            self.default_drive_mode = default_drive_mode
+            self.drive_modes = []
             self.asset = None
 
             self.joint_names = []
@@ -55,6 +56,7 @@ class Asset():
         self.joint_names = self.gym.get_asset_dof_names(self.asset)
         self.joint_props = self.gym.get_asset_dof_properties(self.asset)
         self.num_joints = self.gym.get_asset_dof_count(self.asset)
+        self.drive_modes = [self.default_drive_mode for i in range(self.num_joints)]
         self.joint_state = np.zeros(self.num_joints, dtype=gymapi.DofState.dtype)
         self.joint_types = [self.gym.get_asset_dof_type(self.asset, i) for i in range(self.num_joints)]
         self.joint_pos = self.joint_state['pos']

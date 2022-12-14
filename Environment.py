@@ -26,6 +26,7 @@ class Environment():
         self.size_env = size_env
         self.envs = []
         self.actors = []
+        self.actor_props = []
         self.render_val = False
         self.sync_time = False
 
@@ -48,6 +49,8 @@ class Environment():
 
             self.gym.set_actor_dof_states(environ, actor, self.asset.joint_state, gymapi.STATE_ALL)
 
+            self.actor_props.append(self.asset.joint_props)
+
     def render(self):
 
         if self.render_val:
@@ -65,17 +68,19 @@ class Environment():
         self.sync_time = val
 
     def set_actor_dof_states(self, dof_modes):
+        self.asset.joint_props = dof_modes
         for i in range(len(self.envs)):
-            props = self.gym.get_actor_dof_properties(self.envs[i], self.actors[i])
-            props["driveMode"] = dof_modes
-            props["stiffness"] = (0.0, 0.0)
-            props["damping"] = (0.0, 0.0)
-            props["friction"] = (0.1, 0.0025)
-            props["effort"] = (1000, 1000)
-            props["velocity"] = (800, 800)
-            self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], props)
+            self.actor_props[i]["driveMode"] = dof_modes
+            self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], self.actor_props[i])
 
-    def apply_force(self, dof, force, actor):
-        #print(dof, force)
-        boole = self.sim.gym.apply_dof_effort(self.envs[actor], dof, force)
-        #print(boole)
+    def set_actor_dof_props(self, stiffness, damping, friction, effort_max, velo_max):
+        for i in range(len(self.envs)):
+            self.actor_props[i]["stiffness"] = (0.0, 0.0)
+            self.actor_props[i]["damping"] = (0.0, 0.0)
+            self.actor_props[i]["friction"] = (0.1, 0.0025)
+            self.actor_props[i]["effort"] = (1000, 1000)
+            self.actor_props[i]["velocity"] = (800, 800)
+            self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], self.actor_props[i])
+
+    def apply_force(self, dof, force, environment):
+        boole = self.sim.gym.apply_dof_effort(self.envs[environment], dof, force)
