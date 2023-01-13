@@ -2,8 +2,9 @@ import numpy as np
 
 class qlearning():
 
-    def __init__(self, actions, states, action_bounds, state_bounds, learn_rate, gamma, bin_size):
-        self.actions = actions
+    def __init__(self, num_actions, states, action_bounds, state_bounds, learn_rate, gamma, bin_size):
+        self.action_space = num_actions
+        self.actions = []
         self.action_bounds = action_bounds
         self.states = states
         self.state_bounds = state_bounds
@@ -16,15 +17,48 @@ class qlearning():
         
 
     def initialize_table(self):
-        for i in range(len(self.states)):
+        for i in range(self.states):
                 self.bins.append(np.linspace(self.state_bounds[i][0], self.state_bounds[i][1], self.bin_size))
 
-        self.qtable = np.random.uniform(low=-1, high=1, size=[self.bin_size]* self.states + [self.actions])
+        self.qtable = np.random.uniform(low=-1, high=1, size=[self.bin_size]* self.states + [self.action_space]) 
+        self.actions = np.linspace(self.action_bounds[0], self.action_bounds[1], self.action_space)
 
     def discretize(self, state):
         disc_states = []
         for i in range(len(state)):
             disc_states.append(np.digitize(state[i], self.bins[i]) - 1)
+        return tuple(disc_states)
 
-    def get_action(self):
-        pass
+    def get_action(self, state):
+        dig_stat = self.discretize(state)
+
+        action_idx = np.argmax(self.qtable[dig_stat])
+        action = self.actions[action_idx]
+
+        return (action, action_idx)
+
+    def get_sample_action(self):
+
+        numb = np.random.randint(low=0, high=self.action_space, size=1)
+        numb = numb[0]
+
+        return self.actions[numb]
+
+    def update_table(self, state, action_idx, reward):
+        dig_stat = self.discretize(state)
+        max_future_q = np.max(self.qtable[dig_stat])
+        current_q = self.qtable[dig_stat+(action_idx, )]
+        new_q = (1 - self.learn_rate)*current_q + self.learn_rate*(reward + self.gamma*max_future_q)
+        print(new_q)
+        self.qtable[dig_stat+(action_idx,)] = new_q
+
+if __name__ == "__main__":
+
+    qtable = qlearning(3,2,[-2,2], [[-5, 5], [-2,2]], 0.1, 0.95, 10)
+
+    qtable.initialize_table()
+    state = [-3, 1.45]
+    action, action_idx = qtable.get_action(state)
+
+    qtable.update_table(state, action_idx, 100)
+ 
