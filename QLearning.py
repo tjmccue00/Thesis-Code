@@ -1,6 +1,9 @@
 import numpy as np
 
 class qlearning():
+    """
+    Sets up stores qlearning tables for implementing reinforcement algorithm easily
+    """
 
     def __init__(self, num_actions, states, action_bounds, state_bounds, learn_rate, gamma, bin_size):
         self.action_space = num_actions
@@ -17,6 +20,9 @@ class qlearning():
         
 
     def initialize_table(self):
+        """
+        Initializes QTable based on needed size of action space and state space
+        """
         for i in range(self.states):
                 self.bins.append(np.linspace(self.state_bounds[i][0], self.state_bounds[i][1], self.bin_size))
 
@@ -24,12 +30,25 @@ class qlearning():
         self.actions = np.linspace(self.action_bounds[0], self.action_bounds[1], self.action_space)
 
     def discretize(self, state):
+        """
+        Gets discrete state based upon given continuous states
+
+        Input: List of states that is number of states in length
+        Return: tuple of the discretized states
+        """
+
         disc_states = []
         for i in range(len(state)):
             disc_states.append(np.digitize(state[i], self.bins[i]) - 1)
         return tuple(disc_states)
 
     def get_action(self, state):
+        """
+        Gets best action based on given states
+
+        Input: List of continuous states
+        Return: Tuple of action and discretized action
+        """
         dig_stat = self.discretize(state)
 
         action_idx = np.argmax(self.qtable[dig_stat])
@@ -38,19 +57,35 @@ class qlearning():
         return (action, action_idx)
 
     def get_sample_action(self):
+        """
+        Gets random action
 
+        Input: List of continuous states
+        Return: Tuple of action and discretized action
+        """
         numb = np.random.randint(low=0, high=self.action_space, size=1)
         numb = numb[0]
 
-        return self.actions[numb]
+        return (self.actions[numb], numb)
 
-    def update_table(self, state, action_idx, reward):
-        dig_stat = self.discretize(state)
-        max_future_q = np.max(self.qtable[dig_stat])
-        current_q = self.qtable[dig_stat+(action_idx, )]
+    def update_table(self, next_state, current_state, action_idx, reward):
+        """
+        Updates QTable based on the reward given from current action
+
+        Input:
+            next_state: state that arises from last action
+            current_state: state that came before last action
+            action_idx: discreteized action
+            reward: Reward based on environment
+        """
+
+        next_dig_stat = self.discretize(next_state)
+        current_dig_stat = self.discretize(current_state)
+        max_future_q = np.max(self.qtable[next_dig_stat])
+        current_q = self.qtable[current_dig_stat+(action_idx, )]
         new_q = (1 - self.learn_rate)*current_q + self.learn_rate*(reward + self.gamma*max_future_q)
-        print(new_q)
-        self.qtable[dig_stat+(action_idx,)] = new_q
+        
+        self.qtable[current_dig_stat+(action_idx,)] = new_q
 
 if __name__ == "__main__":
 

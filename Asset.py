@@ -6,6 +6,11 @@ def clamp(x, min_value, max_value):
     return max(min(x, max_value), min_value)
 
 class Asset():
+    """
+    Holds asset settings, joint states as well as joint limits and 
+    model files, actors are instantiated using an asset    
+    """
+
 
     def __init__ (self, root_file, asset_name, sim, gym, name,\
                 fix_base = True,\
@@ -41,6 +46,9 @@ class Asset():
             self.trans_t = trans_t
 
     def initialize(self):
+        """
+        Initializes the asset object and sets up options using gymapi
+        """
 
         asset_opts = gymapi.AssetOptions()
         asset_opts.convex_decomposition_from_submeshes = True
@@ -48,7 +56,7 @@ class Asset():
         asset_opts.use_mesh_materials = self.mesh_materials
         asset_opts.collapse_fixed_joints = self.collapse_fixed
         asset_opts.vhacd_enabled = True
-        asset_opts.default_dof_drive_mode = self.drive_mode
+        asset_opts.default_dof_drive_mode = self.default_drive_mode
         asset_opts.thickness = self.th
         asset_opts.enable_gyroscopic_forces = True
         self.asset = self.gym.load_asset(self.sim.sim, self.root_file, self.asset_name, asset_opts)
@@ -67,6 +75,10 @@ class Asset():
         self.defaults = np.zeros(self.num_joints)
 
     def configure_joint_lims(self):
+        """
+        Confiures joint limits upon initialization from joint properties
+        """
+
 
         for i in range(self.num_joints):
             if self.has_lim[i]:
@@ -87,10 +99,18 @@ class Asset():
             self.joint_pos[i] = self.defaults[i]
 
     def print_joint_names(self):
+        """
+        Prints joint names as they appear in the urdf file
+        """
         for i in range(len(self.joint_names)):
             print(self.joint_names[i])
 
     def get_joint_names(self):
+        """
+        Returns joint names in a list
+
+        Return: List of joint names
+        """
         return self.joint_names
 
 

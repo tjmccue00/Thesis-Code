@@ -3,6 +3,12 @@ import numpy as np
 from isaacgym import gymapi, gymutil
 
 def get_quat_from_eul(rpy):
+    """
+    Converts rpy coordinates to quaternion coords
+
+    Input: Takes list of rpy coords in degrees
+    Return: List of quaternion coords
+    """
     roll = rpy[0]*math.pi/180
     pitch = rpy[1]*math.pi/180
     yaw = rpy[2]*math.pi/180
@@ -15,6 +21,11 @@ def get_quat_from_eul(rpy):
     return gymapi.Quat(qw, qx, qy, qz)
 
 class Environment():
+    """
+    Holds all environment information as well as all the actors within, controls render settings and
+    sets initial state of actors within environments
+    """
+
 
     def __init__(self, asset, sim, gym, num_env, num_per_row, size_env):
 
@@ -32,6 +43,10 @@ class Environment():
 
     
     def initialize(self):
+        """
+        Initializes environment object and sets up actors initial state within each environment created
+        """
+
 
         up_bound = gymapi.Vec3(self.size_env/2, self.size_env, self.size_env/2)
         low_bound = gymapi.Vec3(-self.size_env/2, 0, -self.size_env/2)
@@ -52,6 +67,9 @@ class Environment():
             self.actor_props.append(self.asset.joint_props)
 
     def render(self):
+        """
+        Renders and syncs frames to real time depending on attribute values
+        """
 
         if self.render_val:
             self.gym.step_graphics(self.sim.sim)
@@ -62,18 +80,44 @@ class Environment():
 
 
     def set_Render(self, val):
+        """
+        Sets whether to render the environment or not
+
+        Input: Boolean value that is true to render, false otherwise
+        """
         self.render_val = val
 
     def set_Sync(self, val):
+        """
+        Sets whether to sync frames to real time in the environment
+
+        Input: Boolean value that is true to sync, false otherwise
+        """
         self.sync_time = val
 
     def set_actor_dof_states(self, dof_modes):
+        """
+        Sets actor states based on list of DOF modes
+
+        Input: List of gymapi Degree of Freedom modes that is len(joints)
+        """
         self.asset.joint_props = dof_modes
         for i in range(len(self.envs)):
             self.actor_props[i]["driveMode"] = dof_modes
             self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], self.actor_props[i])
 
     def set_actor_dof_props(self, stiffness, damping, friction, effort_max, velo_max):
+        """
+        Sets actor props based upon entered values
+
+        Input:
+            stiffness: List of stiffness values for each joint
+            damping: List of damping values for each joint
+            friction: List of friction values for each joint
+            effort_max: List of max effort that can be applied to each joint
+            velo_max: List of max velocity each joint can reach
+        """
+
         for i in range(len(self.envs)):
             self.actor_props[i]["stiffness"] = (0.0, 0.0)
             self.actor_props[i]["damping"] = (0.0, 0.0)
@@ -83,4 +127,13 @@ class Environment():
             self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], self.actor_props[i])
 
     def apply_force(self, dof, force, environment):
+        """
+        Applies force to a specific joint within an environment
+
+        Input:
+            dof: DOF handle for joint
+            force: Force applied
+            environment: Environment index
+        """
+
         boole = self.sim.gym.apply_dof_effort(self.envs[environment], dof, force)

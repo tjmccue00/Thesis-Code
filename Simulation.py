@@ -3,6 +3,9 @@ import numpy as np
 from isaacgym import gymapi, gymutil
 
 class Simulation():
+    """
+    Object that stores all simulation information, solver states, and physics settings
+    """
 
     def __init__(self, gym,\
                 dt = 1.0/60,\
@@ -25,27 +28,43 @@ class Simulation():
         self.camera = None
 
     def initialize(self):
+        """
+        Initializes simulation with basic settings and creates sim and camera object
+        """
 
-            sim_params = gymapi.SimParams()
-            sim_params.physx.solver_type = self.solver_type
-            sim_params.physx.num_position_iterations = self.num_pos_iters
-            sim_params.physx.num_velocity_iterations = self.num_vel_iters
-            sim_params.physx.use_gpu = self.use_GPU
-            sim_params.use_gpu_pipeline = self.GPU_pipe
+        sim_params = gymapi.SimParams()
+        sim_params.physx.solver_type = self.solver_type
+        sim_params.physx.num_position_iterations = self.num_pos_iters
+        sim_params.physx.num_velocity_iterations = self.num_vel_iters
+        sim_params.physx.use_gpu = self.use_GPU
+        sim_params.use_gpu_pipeline = self.GPU_pipe
 
-            self.sim = self.gym.create_sim(0, 0, self.sim_type, sim_params)
+        self.sim = self.gym.create_sim(0, 0, self.sim_type, sim_params)
 
-            self.camera = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
+        self.camera = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
 
     def create_ground(self):
+        """
+        Creates ground plane in the x-y plane
+        """
+
 
         plane_parameters = gymapi.PlaneParams()
         self.gym.add_ground(self.sim, plane_parameters)
 
     def end_sim(self):
+        """
+        Ends the simulation and cleans up backend tasks
+        """
 
         self.gym.destroy_viewer(self.camera)
         self.gym.destroy_sim(self.sim)
 
     def get_Camera(self):
+        """
+        Gets and returns the sim camera object
+
+        Return: gymapi camera object for current simulation
+        """
+
         return self.camera
