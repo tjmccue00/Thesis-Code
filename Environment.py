@@ -119,11 +119,11 @@ class Environment():
         """
 
         for i in range(len(self.envs)):
-            self.actor_props[i]["stiffness"] = (0.0, 0.0)
-            self.actor_props[i]["damping"] = (0.0, 0.0)
-            self.actor_props[i]["friction"] = (0.1, 0.0025)
-            self.actor_props[i]["effort"] = (1000, 1000)
-            self.actor_props[i]["velocity"] = (800, 800)
+            self.actor_props[i]["stiffness"] = stiffness
+            self.actor_props[i]["damping"] = damping
+            self.actor_props[i]["friction"] = friction
+            self.actor_props[i]["effort"] = effort_max
+            self.actor_props[i]["velocity"] = velo_max
             self.gym.set_actor_dof_properties(self.envs[i], self.actors[i], self.actor_props[i])
 
     def apply_force(self, dof, force, environment):

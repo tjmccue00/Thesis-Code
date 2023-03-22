@@ -14,7 +14,7 @@ class Simulation():
                 solver_type = 1,\
                 sim_type = gymapi.SimType.SIM_PHYSX,\
                 num_position_iterations = 9,\
-                num_velocity_iterations = 4):
+                num_velocity_iterations = 6):
 
         self.gym = gym
         self.dt = dt
@@ -33,6 +33,7 @@ class Simulation():
         """
 
         sim_params = gymapi.SimParams()
+        sim_params.dt = self.dt
         sim_params.physx.solver_type = self.solver_type
         sim_params.physx.num_position_iterations = self.num_pos_iters
         sim_params.physx.num_velocity_iterations = self.num_vel_iters
@@ -50,6 +51,9 @@ class Simulation():
 
 
         plane_parameters = gymapi.PlaneParams()
+        plane_parameters.static_friction = 1
+        plane_parameters.dynamic_friction = 1
+        plane_parameters.restitution = 0
         self.gym.add_ground(self.sim, plane_parameters)
 
     def end_sim(self):

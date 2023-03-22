@@ -42,6 +42,10 @@ class qlearning():
             disc_states.append(np.digitize(state[i], self.bins[i]) - 1)
         return tuple(disc_states)
 
+    def get_disc_act(self, action):
+        disc_act = np.digitize(action, self.actions) - 1
+        return disc_act
+
     def get_action(self, state):
         """
         Gets best action based on given states

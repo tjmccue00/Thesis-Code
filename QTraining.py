@@ -13,7 +13,7 @@ model_file_name = r"Cart and Pendelum Assembly.urdf"
 
 gym = gymapi.acquire_gym()
 
-sim = sm.Simulation(gym, dt=1/10)
+sim = sm.Simulation(gym, dt=1/360)
 sim.initialize()
 sim.create_ground()
 
@@ -24,8 +24,8 @@ asset.configure_joint_lims()
 env = en.Environment(asset, sim, gym, 4, 2, 2)
 env.initialize()
 
-env.set_Render(True)
-env.set_Sync(True)
+env.set_Render(False)
+env.set_Sync(False)
 
 rng.seed(3289457)
 for i in range(len(env.envs)):
@@ -51,7 +51,7 @@ for i in range(len(env.envs)):
 
 stiffness = (0.0, 0.0)
 damping = (0.0, 0.0)
-friction = (0.1, 0.025)
+friction = (0.0, 0.00)
 max_velo = (1000, 1000)
 max_effort = (800, 800)
 env.set_actor_dof_props(stiffness, damping, friction, max_effort, max_velo)
@@ -60,14 +60,15 @@ cam_pos = gymapi.Vec3(0, .25, 2)
 cam_target = gymapi.Vec3(0, 0, 0)
 gym.viewer_camera_look_at(sim.get_Camera(), None, cam_pos, cam_target)
 
-qlearn = QLearning.qlearning(70, 4, [-100, 100], [[-.2095, .2095], [-10, 10], [-0.62, 0.62], [-10, 10]], 0.25, 0.995, 70)
+qlearn = QLearning.qlearning(10, 4, [-200, 200], [[-.2095, .2095], [-10, 10], [-0.62, 0.62], [-10, 10]], 0.15, 0.995, 30)
 qlearn.initialize_table()
 epsilon = 0.25
-episodes = 50000
+episodes = 500000
 done = False
 rewards = 0
 scores = [0]*len(env.envs)
 current_states = [(0,0,0,0)]*len(env.envs)
+current_actions = [0]*len(env.envs)
 
 for i in range(len(env.envs)):
 
@@ -92,6 +93,7 @@ while episode < episodes:
 
     for i in range(len(env.envs)):
 
+
         if np.random.uniform(0,1) < epsilon:
             
             action, action_idx = qlearn.get_sample_action()
@@ -100,6 +102,8 @@ while episode < episodes:
 
             action, action_idx = qlearn.get_action((pos, velo, cart_pos, velo_cart))
 
+
+        #action = current_actions[i] + action
         env.apply_force(cart_joints[i], action, i)
 
     gym.simulate(sim.sim)
@@ -121,13 +125,14 @@ while episode < episodes:
             done = True
             episode += 1
 
-        reward = 2-pos**2
-        scores[i] += reward
+        #reward = (1-2*pos) - 0.1*velo - 0.1*velo_cart
+        
         if not done:
-            reward += 1
-            qlearn.update_table(next_state, current_states[i], action_idx, reward)
+            reward = 1
+            scores[i] += reward
+            
             current_states[i] = next_state
-            timestep[i] += 1/60
+            timestep[i] += 1/360
 
         else:
             env.asset.joint_pos[1] = rng.randint(-2, 2)/10
@@ -145,24 +150,26 @@ while episode < episodes:
             rewards += scores[i]
             all_scores.append(scores[i])
             all_episodes.append(episode)
-            if episode % 250 == 0:
-                print("Episode: ", episode, "Rewards: ", round(rewards,1), "Episode Score: ", round(scores[i], 2), "Episode Time: ", round(timestep[i],1))
+            if episode % 10 == 0:
+                print("Episode: ", episode, "Rewards: ", round(rewards,1), "Episode Score: ", round(scores[i], 2), "Episode Time: ", round(timestep[i],1), epsilon)
             scores[i] = 0
             timestep[i] = 0
+            current_actions[i] = 0
+            #epsilon = 0.25*(1 - episode/episodes)
             done = False
 
-
+        qlearn.update_table(next_state, current_states[i], action_idx, reward)
     env.render()
 
 
 
 sim.end_sim()
 
-all_scores = all_scores[0:50000]
-all_episodes = all_episodes[0:50000]
+all_scores = all_scores[0:episodes]
+all_episodes = all_episodes[0:episodes]
 
-all_scores = np.mean(np.array(all_scores).reshape(500, 100), axis=1)
-all_episodes = np.mean(np.array(all_episodes).reshape(500, 100), axis=1)
+all_scores = np.mean(np.array(all_scores).reshape(100, int(episodes/100)), axis=1)
+all_episodes = np.mean(np.array(all_episodes).reshape(100, int(episodes/100)), axis=1)
 
 fig, ax = plt.subplots()
 ax.scatter(all_episodes, all_scores, c="green")

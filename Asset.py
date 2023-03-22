@@ -59,6 +59,8 @@ class Asset():
         asset_opts.default_dof_drive_mode = self.default_drive_mode
         asset_opts.thickness = self.th
         asset_opts.enable_gyroscopic_forces = True
+        asset_opts.angular_damping=0
+        asset_opts.linear_damping=0
         self.asset = self.gym.load_asset(self.sim.sim, self.root_file, self.asset_name, asset_opts)
 
         self.joint_names = self.gym.get_asset_dof_names(self.asset)
