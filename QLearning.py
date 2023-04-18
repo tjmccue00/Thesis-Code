@@ -83,13 +83,12 @@ class qlearning():
             reward: Reward based on environment
         """
 
-        next_dig_stat = self.discretize(next_state)
-        current_dig_stat = self.discretize(current_state)
-        max_future_q = np.max(self.qtable[next_dig_stat])
-        current_q = self.qtable[current_dig_stat+(action_idx, )]
+        #next_dig_stat = self.discretize(next_state)
+        #current_dig_stat = self.discretize(current_state)
+        max_future_q = np.max(self.qtable[next_state])
+        current_q = self.qtable[current_state+(action_idx, )]
         new_q = (1 - self.learn_rate)*current_q + self.learn_rate*(reward + self.gamma*max_future_q)
-        
-        self.qtable[current_dig_stat+(action_idx,)] = new_q
+        self.qtable[current_state+(action_idx,)] = new_q
 
 if __name__ == "__main__":
 
