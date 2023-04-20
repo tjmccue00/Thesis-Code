@@ -20,7 +20,7 @@ def Discrete(state, bins):
         disc_states.append(np.digitize(state[i], bins[i]) - 1)
     return tuple(disc_states)
 
-def Q_learning(q_table, bins, episodes = 5000, gamma = 0.95, lr = 0.1, timestep = 5000, epsilon = 0.2):
+def Q_learning(q_table, bins, episodes = 5000, gamma = 0.95, lr = 0.1, timestep = 100, epsilon = 0.2):
     rewards = 0
     solved = False 
     steps = 0 
@@ -89,5 +89,5 @@ def Q_learning(q_table, bins, episodes = 5000, gamma = 0.95, lr = 0.1, timestep 
 
 q_table, bins = Qtable(len(env.observation_space.low), env.action_space.n)
 
-Q_learning(q_table, bins, lr = 0.15, gamma = 0.995, episodes = 10*10**3, timestep = 1000)
+Q_learning(q_table, bins, lr = 0.15, gamma = 0.995, episodes = 5**3, timestep = 100)
 

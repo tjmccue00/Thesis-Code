@@ -1,6 +1,6 @@
 import numpy as np
 
-class qlearning():
+class Agent():
     """
     Sets up stores qlearning tables for implementing reinforcement algorithm easily
     """
@@ -23,10 +23,11 @@ class qlearning():
         """
         Initializes QTable based on needed size of action space and state space
         """
+        
         for i in range(self.states):
                 self.bins.append(np.linspace(self.state_bounds[i][0], self.state_bounds[i][1], self.bin_size))
 
-        self.qtable = np.random.uniform(low=-1, high=1, size=[self.bin_size]* self.states + [self.action_space]) 
+        self.qtable = np.random.uniform(low=-1, high=1, size=([self.bin_size]* self.states + [self.action_space])) 
         self.actions = np.linspace(self.action_bounds[0], self.action_bounds[1], self.action_space)
 
     def discretize(self, state):
@@ -53,9 +54,8 @@ class qlearning():
         Input: List of continuous states
         Return: Tuple of action and discretized action
         """
-        dig_stat = self.discretize(state)
 
-        action_idx = np.argmax(self.qtable[dig_stat])
+        action_idx = np.argmax(self.qtable[state])
         action = self.actions[action_idx]
 
         return (action, action_idx)
@@ -83,8 +83,6 @@ class qlearning():
             reward: Reward based on environment
         """
 
-        #next_dig_stat = self.discretize(next_state)
-        #current_dig_stat = self.discretize(current_state)
         max_future_q = np.max(self.qtable[next_state])
         current_q = self.qtable[current_state+(action_idx, )]
         new_q = (1 - self.learn_rate)*current_q + self.learn_rate*(reward + self.gamma*max_future_q)
@@ -92,7 +90,7 @@ class qlearning():
 
 if __name__ == "__main__":
 
-    qtable = qlearning(3,2,[-2,2], [[-5, 5], [-2,2]], 0.1, 0.95, 10)
+    qtable = Agent(3,2,[-2,2], [[-5, 5], [-2,2]], 0.1, 0.95, 10)
 
     qtable.initialize_table()
     state = [-3, 1.45]
