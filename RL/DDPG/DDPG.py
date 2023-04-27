@@ -9,84 +9,97 @@ from OUNoise import OrnsteinUhlenbeckNoise
 
 class Agent(object):
     
-    def __init__(self, alpha, beta, input_dims, tau, env, gamma=0.99, n_actions=2, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64):
+    def __init__(self, input_dims, env, tau=0.005, alpha=0.001, beta=0.002, gamma=0.99, 
+                 n_actions=2, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64, min_action=-1, max_action=1):
+
         self.gamma = gamma
         self.tau = tau
-        self.memory = rb.ReplayBuffer(max_size, input_dims, n_actions)
+        self.memory = ReplayBuffer(max_size, input_dims, n_actions)
         self.batch_size = batch_size
-        self.sess = tf.Session()
+        self.min_action = min_action
+        self.max_action = max_action
         
-        self.actor = ac.Actor(alpha, n_actions, 'Actor', input_dims, self.sess, layer1_size, layer2_size, env.action_space)
+        self.actor = Actor(n_actions=n_actions, name='Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
+        self.critic = Critic(name='Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
 
-        self.critic = cr.Critic(beta, n_actions, 'Critic', input_dims, self.sess, layer1_size, layer2_size)
+        self.target_actor = Actor(n_actions=n_actions, name='Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
+        self.target_critic = Critic(name='Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
 
-        self.target_actor = ac.Actor(alpha, n_actions, 'TargetActor', input_dims, self.sess, layer1_size, layer2_size, env.action_space)
+        self.actor.compile(optimizer=Adam(learning_rate=alpha))
+        self.critic.compile(optimizer=Adam(learning_rate=beta))
+        self.target_actor.compile(optimizer=Adam(learning_rate=alpha))
+        self.target_critic.compile(optimizer=Adam(learning_rate=beta))
 
-        self.target_critic = cr.Critic(beta, n_actions, 'TargetCritic', input_dims, self.sess, layer1_size, layer2_size)
+        self.noise = OrnsteinUhlenbeckNoise(mu=np.zeros(n_actions))
 
-        self.noise = oun.OrnsteinUhlenbeckNoise(mu=np.zeros(n_actions))
-        
-        self.update_critic = [self.target_critic.params[i].assign(tf.multiply(self.critic_params[i], self.tau) + tf.multiply(self.target_critic_params[i], 1 - self.tau)) for i in range(len(self.target_critic.params))]
+        self.update_network_parameters(tau=1)
 
-        self.update_actor = [self.target_actor.params[i].assign(tf.multiply(self.actor_params[i], self.tau) + tf.multiply(self.target_actor_params[i], 1 - self.tau)) for i in range(len(self.target_actor.params))]
+    def update_network_parameters(self, tau=None):
+        if tau == None:
+            tau= self.tau
 
-        self.sess.run(tf.global_variables_initializer())
+        weights = []
+        targets = self.target_actor.weights
+        for i, weight in enumerate(self.actor.weights):
+            weights.append(weight*tau + targets[i]*(1 - tau))
+        self.target_actor.set_weights(weights)
 
-        self.update_network_parameters(first=True)
-
-    def update_network_parameters(self, first=False):
-        if first:
-            old_tau = self.tau
-            self.tau = 1.0
-            self.target_critic.sess.run(self.update_critic)
-            self.target_actor.sess.run(self.update_actor)
-            self.tau = old_tau
-
-        else:
-            self.target_critic.ses.run(self.update_critic)
-            self.target_actor.sess.run(self.update_actor)
+        weights = []
+        targets = self.target_critic.weights
+        for i, weight in enumerate(self.critic.weights):
+            weights.append(weight*tau + targets[i]*(1 - tau))
+        self.target_critic.set_weights(weights)
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
 
-    def choose_action(self, state):
-        state = state[np.newaxis, :]
-        mu = self.actor.predict(state)
-        noise = self.noise()
-        mu_prime = mu + noise
-
-        return mu_prime[0]
+    def choose_action(self, state, evaluate=False):
+        state = tf.convert_to_tensor([state], dtype=tf.float32)
+        actions = self.actor(state)
+        if not evaluate:
+            noise = self.noise()
+            mu_prime = actions + noise
+            actions = tf.clip_by_value(actions, self.min_action, self.max_action)
+        return actions[0]
 
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
             return
-        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        states, actions, rewards, new_states, dones = self.memory.sample_buffer(self.batch_size)
 
+        state = tf.convert_to_tensor(states, dtype=tf.float32)
+        new_state = tf.convert_to_tensor(new_states, dtype=tf.float32)
+        actions = tf.convert_to_tensor(actions, dtype=tf.float32)
+        rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
 
-        critic_value = self.target_critic.predict(new_state, self.target_actor.predict(new_state))
+        with tf.GradientTape() as tape:
+            target_actions = self.target_actor(new_states)
+            critic_value_ = tf.squeeze(self.target_critic(new_states, target_actions), 1)
+            critic_value = tf.squeeze(self.critic(states, actions), 1)
+            target = rewards + self.gamma*critic_value_*(1-dones)
+            critic_loss = keras.losses.MSE(target, critic_value)
 
-        target = []
+        critic_network_gradient = tape.gradient(critic_loss, self.critic.trainable_variables)
+        self.critic.optimizer.apply_gradients(zip(critic_network_gradient, self.critic.trainable_variables))
 
-        for j in range(self.batch_size):
-            target.append(reward[j] + self.gamma*critic_value[j]*done[j])
-        
-        target = np.reshape(target, (self.batch_size, 1))
-        _ = self.critic.train(state, action, target)
+        with tf.GradientTape() as tape:
+            new_policy_actions = self.actor(states)
+            actor_loss = -self.critic(states, new_policy_actions)
+            actor_loss = tf.math.reduce_mean(actor_loss)
 
-        a_outs = self.actor.predict(state)
-        grads = self.critic.get_action_gradients(state, a_outs)
-        self.actor.train(state, grads[0])
+        actor_network_gradient = tape.gradient(actor_loss, self.actor.trainable_variables)
+        self.actor.optimizer.apply_gradients(zip(actor_network_gradient, self.actor.trainable_variables))
 
         self.update_network_parameters()
 
     def save_models(self):
-        self.actor.save_checkpoint()
-        self.target_actor.save_checkpoint()
-        self.critic.save_checkpoint()
-        self.target_critic.save_checkpoint()
+        self.actor.save_weights(self.actor.checkpoint_file)
+        self.target_actor.save_weights(self.target_actor.checkpoint_file)
+        self.critic.save_weights(self.critic.checkpoint_file)
+        self.target_critic.save_weights(self.target_critic.checkpoint_file)
 
     def load_models(self):
-        self.actor.load_checkpoint()
-        self.target_actor.load_checkpoint()
-        self.critic.load_checkpoint()
-        self.target_critic.load_checkpoint()
+        self.actor.load_weights(self.actor.checkpoint_file)
+        self.target_actor.load_weights(self.target_actor.checkpoint_file)
+        self.critic.load_weights(self.critic.checkpoint_file)
+        self.target_critic.load_weights(self.target_critic.checkpoint_file)

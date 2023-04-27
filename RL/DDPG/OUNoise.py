@@ -1,11 +1,3 @@
-# target q network class
-# replay buffer class
-# use batch norm
-# stochastic policy used to learn greedy policy
-# two actor and critic networks a target for each
-# updates are soft, according to theta prime = tau*theta + (1-tau)*theta_prime tau << 1
-# target actor is just the evaluation actor plus some noise process
-# used ornstein uhlenbeck process -> need class for noise
 import os
 import numpy as np
 import tensorflow as tf
