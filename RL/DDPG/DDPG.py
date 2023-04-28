@@ -3,14 +3,14 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.optimizers import Adam
-from Networks import Actor, Critic
-from ReplayBuffer import ReplayBuffer
-from OUNoise import OrnsteinUhlenbeckNoise
+from RL.DDPG.Networks import Actor, Critic
+from RL.DDPG.ReplayBuffer import ReplayBuffer
+from RL.DDPG.OUNoise import OrnsteinUhlenbeckNoise
 
 class Agent(object):
     
-    def __init__(self, input_dims, env, tau=0.005, alpha=0.001, beta=0.002, gamma=0.99, 
-                 n_actions=2, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64, min_action=-1, max_action=1):
+    def __init__(self, input_dims, tau=0.005, alpha=0.001, beta=0.002, gamma=0.99, 
+                 n_actions=8, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64, min_action=-1, max_action=1, act_mult=1):
 
         self.gamma = gamma
         self.tau = tau
@@ -18,6 +18,7 @@ class Agent(object):
         self.batch_size = batch_size
         self.min_action = min_action
         self.max_action = max_action
+        self.act_mult = act_mult
         
         self.actor = Actor(n_actions=n_actions, name='Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
         self.critic = Critic(name='Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
@@ -59,7 +60,8 @@ class Agent(object):
         if not evaluate:
             noise = self.noise()
             mu_prime = actions + noise
-            actions = tf.clip_by_value(actions, self.min_action, self.max_action)
+            actions = tf.clip_by_value(mu_prime*self.act_mult, self.min_action, self.max_action)
+
         return actions[0]
 
     def learn(self):

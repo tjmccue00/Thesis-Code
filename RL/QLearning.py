@@ -88,6 +88,20 @@ class Agent():
         new_q = (1 - self.learn_rate)*current_q + self.learn_rate*(reward + self.gamma*max_future_q)
         self.qtable[current_state+(action_idx,)] = new_q
 
+
+    def save_qtable(self, name):
+        np.save(r"Learning Models/" + name + "_qtable.npy", self.qtable)
+        np.save(r"Learning Models/" + name + "_bins.npy", self.bins)
+        np.save(r"Learning Models/" + name + "_actions.npy", self.actions)
+
+    def load_qtable(self, name):
+        self.qtable = np.load(r"Learning Models/" + name + "_qtable.npy")
+        self.qtable = np.squeeze(self.qtable)
+        self.bins = np.load(r"Learning Models/" + name + "_bins.npy")
+        self.bins = np.squeeze(self.bins)
+        self.actions = np.load(r"Learning Models/" + name + "_actions.npy")
+        self.actions = np.squeeze(self.actions)
+
 if __name__ == "__main__":
 
     qtable = Agent(3,2,[-2,2], [[-5, 5], [-2,2]], 0.1, 0.95, 10)

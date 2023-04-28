@@ -73,7 +73,7 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
         pos = gym.get_joint_position(env.envs[i], pole_joints[i])
         velo = gym.get_joint_velocity(env.envs[i], pole_joints[i])
         velo_cart = gym.get_joint_velocity(env.envs[i], cart_joints[i])
-        force = 250*pos+7.5*velo
+        force = 500*pos+7.5*velo
         env.apply_force(cart_joints[i], force, i)
 
     env.render()

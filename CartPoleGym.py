@@ -56,7 +56,7 @@ for episode in range(1,epochs+1):
         if steps % 20 == 0:
             ppo.learn()
             learn_iters += 1
-            #qtable.update_table(next_state, current_state, action_idx, reward)
+        #qtable.update_table(next_state, current_state, action_idx, reward)
 
         current_state = next_state
     else:

@@ -8,9 +8,9 @@ from RL.PPO.Memory import PPOMemory
 from RL.PPO.Networks import ActorNetwork, CriticNetwork
 
 class Agent:
-    def __init__(self, n_actions, input_dims, gamma=0.99, alpha=0.0003, 
-                 gae_lambda=0.95, policy_clip=0.2, batch_size=64, 
-                 n_epochs=10, chkpt_dir='models/'):
+    def __init__(self, n_actions, action_bounds, gamma=0.99, alpha=0.003, 
+                 gae_lambda=0.995, policy_clip=0.2, batch_size=64, 
+                 n_epochs=10, chkpt_dir='Learning Models/'):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
@@ -22,6 +22,8 @@ class Agent:
         self.actor.compile(optimizer=Adam(learning_rate=alpha))
         self.critic.compile(optimizer=Adam(learning_rate=alpha))
         self.memory = PPOMemory(batch_size)
+
+        self.actions = np.linspace(action_bounds[0], action_bounds[1], n_actions)
        
     def store_memory(self, state, action, probs, vals, reward, done):
         self.memory.store_memory(state, action, probs, vals, reward, done)
@@ -44,11 +46,12 @@ class Agent:
         log_prob = dist.log_prob(action)
         value = self.critic(state)
 
-        action = action.numpy()[0]
+        action_idx = action.numpy()[0]
         value = value.numpy()[0]
         log_prob = log_prob.numpy()[0]
+        action = self.actions[action_idx]
 
-        return action, log_prob, value
+        return action, log_prob, value, action_idx
 
     def learn(self):
         for _ in range(self.n_epochs):

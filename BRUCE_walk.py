@@ -1,12 +1,12 @@
-import Environment as en
-import Asset as ast
-import Simulation as sm
+import Environments.SimModules.Environment as en
+import Environments.SimModules.Asset as ast
+import Environments.SimModules.Simulation as sm
 import math
 import numpy as np
 from isaacgym import gymapi, gymutil
 import keyboard
-import BRUCE
-import gait
+import Environments.AssetClass.BRUCE as BRUCE
+import Environments.AssetClass.gait as gait
 
 model_file = r"/home/tjmccue/Documents/Thesis/BRUCE URDF/urdf"
 model_file_name = r"BRUCE URDF v2.urdf"
@@ -60,7 +60,7 @@ while not gym.query_viewer_has_closed(sim.get_Camera()):
         env.asset.joint_pos[0] = -hip1
         env.asset.joint_pos[1] = -knee1
         env.asset.joint_pos[2] = hip2
-        env.asset.joint_pos[3] = knee2
+        env.asset.joint_pos[3] = knee2  #inconsistent naming, order irrelevant
         env.asset.joint_pos[4] = -hip3
         env.asset.joint_pos[5] = knee3
         env.asset.joint_pos[6] = hip4
