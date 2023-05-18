@@ -10,8 +10,8 @@ if __name__ == '__main__':
     n_epochs = 4
     alpha = 0.0003
 
-    agent = Agent(n_actions=env.action_space.n, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs, 
-                  input_dims=env.observation_space.shape)
+    agent = Agent(n_actions=env.action_space.n, action_bounds=[0,1], batch_size=batch_size, 
+                  alpha=alpha, n_epochs=n_epochs)
 
     n_games = 300
 
@@ -27,12 +27,12 @@ if __name__ == '__main__':
         done = False
         score = 0
         while not done:
-            action, prob, val = agent.choose_action(observation)
-            observation_, reward, done, truncated, info = env.step(action)
+            action, prob, val, action_idx = agent.choose_action(observation)
+            observation_, reward, done, truncated, info = env.step(int(action))
 
             n_steps += 1
             score += reward
-            agent.store_memory(observation, action, prob, val, reward, done)
+            agent.store_memory(observation, action_idx, prob, val, reward, done)
 
             if n_steps % N == 0:
                 agent.learn()
