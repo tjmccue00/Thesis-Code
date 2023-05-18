@@ -19,12 +19,13 @@ class Agent(object):
         self.min_action = min_action
         self.max_action = max_action
         self.act_mult = act_mult
+        self.n_actions = n_actions
         
         self.actor = Actor(n_actions=n_actions, name='Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
         self.critic = Critic(name='Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
 
-        self.target_actor = Actor(n_actions=n_actions, name='Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
-        self.target_critic = Critic(name='Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
+        self.target_actor = Actor(n_actions=n_actions, name='Target_Actor', fc1_dims=layer1_size, fc2_dims=layer2_size)
+        self.target_critic = Critic(name='Target_Critic', fc1_dims=layer1_size, fc2_dims=layer2_size)
 
         self.actor.compile(optimizer=Adam(learning_rate=alpha))
         self.critic.compile(optimizer=Adam(learning_rate=beta))
@@ -52,15 +53,20 @@ class Agent(object):
         self.target_critic.set_weights(weights)
 
     def remember(self, state, action, reward, new_state, done):
-        self.memory.store_transition(state, action, reward, new_state, done)
+        self.memory.store_transition(state, action/self.act_mult, reward, new_state, done)
 
     def choose_action(self, state, evaluate=False):
         state = tf.convert_to_tensor([state], dtype=tf.float32)
         actions = self.actor(state)
         if not evaluate:
-            noise = self.noise()
-            mu_prime = actions + noise
-            actions = tf.clip_by_value(mu_prime*self.act_mult, self.min_action, self.max_action)
+            #noise = self.noise()
+            #mu_prime = actions + noise
+            #print("Raw Actions")
+            #print(actions)
+            noise = tf.random.normal(shape=[self.n_actions], mean=0.0, stddev=0.1)
+            actions += noise
+            actions = tf.clip_by_value(actions*self.act_mult, self.min_action, self.max_action)
+
 
         return actions[0]
 

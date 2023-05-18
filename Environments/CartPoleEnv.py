@@ -83,7 +83,7 @@ class CartPole(object):
 
         if (abs(cart_pos) > 0.62) or (abs(pos) > .2095):
              done = True
-             reward = 0
+             reward = 1
         else:
              done = False
              reward = 1

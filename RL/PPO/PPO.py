@@ -8,7 +8,7 @@ from RL.PPO.Memory import PPOMemory
 from RL.PPO.Networks import ActorNetwork, CriticNetwork
 
 class Agent:
-    def __init__(self, n_actions, action_bounds, gamma=0.99, alpha=0.003, 
+    def __init__(self, n_actions, action_bounds, gamma=0.995, alpha=0.003, 
                  gae_lambda=0.995, policy_clip=0.2, batch_size=64, 
                  n_epochs=10, chkpt_dir='Learning Models/'):
         self.gamma = gamma

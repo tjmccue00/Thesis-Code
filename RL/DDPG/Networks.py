@@ -5,7 +5,7 @@ from tensorflow.keras.layers import Dense
 
 class Critic(keras.Model):
     
-    def __init__(self, fc1_dims=512, fc2_dims=512, name='Critic', chkpt_dir =''):
+    def __init__(self, fc1_dims=512, fc2_dims=512, name='Critic', chkpt_dir =r'Learning Models/DDPG/'):
         super(Critic, self).__init__()
         self.fc1_dims = fc1_dims
         self.fc2_dims=fc2_dims
@@ -28,7 +28,7 @@ class Critic(keras.Model):
 
 class Actor(keras.Model):
     
-    def __init__(self, n_actions, fc1_dims=512, fc2_dims=512, name='Actor', chkpt_dir =''):
+    def __init__(self, n_actions, fc1_dims=512, fc2_dims=512, name='Actor', chkpt_dir ='Learning Models/DDPG/'):
         super(Actor, self).__init__()
         self.fc1_dims = fc1_dims
         self.fc2_dims=fc2_dims

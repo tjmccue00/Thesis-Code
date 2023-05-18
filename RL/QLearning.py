@@ -5,7 +5,8 @@ class Agent():
     Sets up stores qlearning tables for implementing reinforcement algorithm easily
     """
 
-    def __init__(self, num_actions, states, action_bounds, state_bounds, learn_rate, gamma, bin_size):
+    def __init__(self, num_actions, states, action_bounds, 
+                 state_bounds, learn_rate, gamma, bin_size, chkpt_dir = "Learning Models/"):
         self.action_space = num_actions
         self.actions = []
         self.action_bounds = action_bounds
@@ -14,6 +15,7 @@ class Agent():
         self.learn_rate = learn_rate
         self.gamma = gamma
         self.bin_size = bin_size
+        self.chkpt_dir = chkpt_dir
         
         self.bins = []
         self.qtable = None

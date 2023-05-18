@@ -11,6 +11,8 @@ from scipy.spatial.transform import Rotation
 import warnings
 
 
+
+
 class BruceEnv(object):
 
     def __init__(self):
@@ -164,7 +166,7 @@ class BruceEnv(object):
         reward = 2*(x - self.prev_xy[0]) + -0.5*(y - self.prev_xy[1]) + base_lin_vel[0][0] - 0.5*abs(base_lin_vel[0][1]) - 0.5*abs(base_lin_vel[0][2]) + \
                   -0.1*abs(base_ang_vel[0][0]) -0.1*abs(base_ang_vel[0][1]) -0.1*abs(base_ang_vel[0][2]) + 25*self.sim.dt
         
-        reward = np.clip(reward, 0, None)
+        #reward = np.clip(reward, 0, None)
         done = False
         stuck = False
         if abs(x - self.prev_xy[0]) < 0.01:

@@ -3,12 +3,13 @@ from RL.QLearning import Agent
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
-qtable = Agent(5, 4, [-200, 200], [[-.2095, .2095], [-10, 10], [-0.62, 0.62], [-10, 10]], 0.2, 0.995, 30)
+qtable = Agent(3, 4, [-200, 200], [[-.2095, .2095], [-10, 10], [-0.62, 0.62], [-10, 10]], 0.2, 0.995, 30)
 
-timestep=500
-epochs =  50000
+timestep=100
+epochs =  150000
 rewards = 0
 solved = False 
 steps = 0 
@@ -20,7 +21,8 @@ epsilon = 0.2
 learn_iters = 0
 qtable.initialize_table()
 cp = CartPole()
-
+date = str(datetime.now())
+bestScore = 0
 
 for episode in range(1,epochs+1):
     current_state = qtable.discretize(cp.reset())  # initial observation
@@ -55,14 +57,19 @@ for episode in range(1,epochs+1):
     
     # Timestep value update
     if episode%timestep == 0:
-        print('Episode : {} | Reward -> {} | Max reward : {} | Time : {}'.format(episode,round(np.mean(data['score'][-100:]),2), max(runs), round(time.time() - ep_start, 3)))
+        if round(np.mean(data['score'][-timestep:]),2) > bestScore:
+            bestScore = round(np.mean(data['score'][-timestep:]),2)
+            qtable.save_qtable("Test4")
+        print('Episode : {} | Reward -> {} | Max reward : {} |'.format(episode,round(np.mean(data['score'][-100:]),2), max(runs)))
         data['score'].append(score)
         data['avg'].append(np.mean(data['score'][-100:]))
         if rewards/timestep >= 195: 
              pass
             #print('Solved in episode : {}'.format(episode))
         rewards, runs= 0, [0]
-qtable.save_qtable("Test3")
+        with open(qtable.chkpt_dir+"QL_data_" + date + ".csv", "a") as f:
+            f.write(str(episode) + "," + str(round(np.mean(data['score'][-timestep:]),2)) + "\n")
+
         
 plt.plot(ep, data['avg'], label = 'Avg')
 plt.title('Average Reward v Episode')

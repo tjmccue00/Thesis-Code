@@ -17,10 +17,11 @@ observations = be.reset()
 brucie = BRUCE.Bruce(0.14, 0.16, 0.2, [1,1,1,1])
 xy = brucie.kin(observations[1], observations[0])
 init_feet_pos = [[xy[1], xy[0]], [xy[1], xy[0]], [xy[1], xy[0]], [xy[1], xy[0]]]
-phase = [(0.28, 0.0), (0.28, 0.075), (0.25, -0.0), (0.28, -0.075)]
+phase = [(0.275, 0.0), (0.28, 0.075), (0.265, 0.0), (0.28, -0.075)]
 walk = gait.Gait(be.sim.dt, 0.75, phase, [0, 1, 2, 3], init_feet_pos)
 t = 0
 already_reset = False
+score = 0
 
 while not be.gym.query_viewer_has_closed(be.sim.get_Camera()):
 
@@ -50,6 +51,7 @@ while not be.gym.query_viewer_has_closed(be.sim.get_Camera()):
             actions = (0, 0, 0, 0, 0, 0, 0, 0)
 
         observations, reward, done = be.step(actions)
+        score += reward
         t += be.sim.dt
 
         if t > 10:
