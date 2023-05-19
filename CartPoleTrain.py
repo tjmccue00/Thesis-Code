@@ -54,6 +54,7 @@ for episode in range(1,epochs+1):
     else:
         rewards += score
         runs.append(score)
+        epsilon -= 0.2/epochs
     
     # Timestep value update
     if episode%timestep == 0:

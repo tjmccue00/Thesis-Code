@@ -6,12 +6,12 @@ from tensorflow.keras.optimizers import Adam
 from RL.DDPG.Networks import Actor, Critic
 from RL.DDPG.ReplayBuffer import ReplayBuffer
 from RL.DDPG.OUNoise import OrnsteinUhlenbeckNoise
-import SGNN
+import RL.DDPG.SGNN as SGNN
 
 class Agent(object):
     
-    def __init__(self, input_dims, mu_arr, var_arr, tau=0.005, alpha=0.001, beta=0.002, gamma=0.99, 
-                 n_actions=8, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64, min_action=-1, max_action=1, act_mult=1):
+    def __init__(self, input_dims, tau=0.005, alpha=0.001, beta=0.002, gamma=0.99, 
+                 n_actions=8, max_size=1000000, batch_size=64, min_action=-1, max_action=1, act_mult=1):
 
         self.gamma = gamma
         self.tau = tau
@@ -20,33 +20,56 @@ class Agent(object):
         self.min_action = min_action
         self.max_action = max_action
         self.act_mult = act_mult
-    # pass in upper and lower bounds for each observation space
-        self.mu_grd = mu_arr
-        self.variance_arr = var_arr
-        self.grid_size = 1 # tunable/ number of neurons in each layer
 
-        layer_weight_initializers = { + 1: tf.initializers.ones()}
-        
-        self.actor = SGNN.GaussianNet(self.mu_grid, self.variance_arr, n_actions, 
-                                       weight_initializers=layer_weight_initializers)
-    # add dense layer with hyperbolic tangent
-    # pull parameters from network to look at convergence
-        self.critic = SGNN.GaussianNet(self.mu_grid, self.variance_arr, 1, 
-                                       weight_initializers=layer_weight_initializers)
+        domain_ub = [np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  10,  10,  10,  1,  1,  1,  1]
+        domain_lb = [-np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -10,  -10,  -10,  -1,  -1,  -1,  -1]
+        grid_size = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30] 
 
-        self.target_actor = SGNN.GaussianNet(self.mu_grid, self.variance_arr, n_actions, 
-                                       weight_initializers=layer_weight_initializers)
-        
-        self.target_critic = SGNN.GaussianNet(self.mu_grid, self.variance_arr, 1, 
-                                       weight_initializers=layer_weight_initializers)
+        dim = len(domain_ub)
 
-        self.actor.compile(optimizer=Adam(learning_rate=alpha))
+        layer_weight_initializers = {dim + 1: tf.initializers.ones()}
+
+        mu_grid, variance_arr = SGNN.cmptGaussCenterandWidth(domain_lb, domain_ub, grid_size)
+
+        actor = SGNN.GaussianNet(mu_grid, variance_arr, 12, 
+                                        weight_initializers=layer_weight_initializers)
+
+        critic = SGNN.GaussianNet(mu_grid, variance_arr, 1, 
+                                        weight_initializers=layer_weight_initializers)
+
+        target_actor = SGNN.GaussianNet(mu_grid, variance_arr, 12,
+                                        weight_initializers=layer_weight_initializers)
+
+        target_critic = SGNN.GaussianNet(mu_grid, variance_arr, 1, 
+                                        weight_initializers=layer_weight_initializers)
+
+        actor_output = keras.layers.Dense(n_actions, kernel_initializer = layer_weight_initializers[dim+1], activation='tanh')
+
+        target_actor._output_layer=actor_output
+        actor._output_layer=actor_output
+
+        actor_inputs = tf.keras.layers.Input(shape=(dim,))
+        target_actor_inputs = tf.keras.layers.Input(shape=(dim,))
+        critic_inputs = tf.keras.layers.Input(shape=(dim,))
+        target_critic_inputs = tf.keras.layers.Input(shape=(dim,))
+
+        actor_outputs = actor(actor_inputs)
+        target_actor_outputs = target_actor(target_actor_inputs)
+        critic_outputs = critic(critic_inputs)
+        target_critic_outputs = target_critic(target_critic_inputs)
+
+        self.actor = tf.keras.models.Model(actor_inputs, actor_outputs)
+        self.target_actor = tf.keras.models.Model(target_actor_inputs, target_actor_outputs)
+        self.critic = tf.keras.models.Model(critic_inputs, critic_outputs)
+        self.target_critic = tf.keras.models.Model(target_critic_inputs, target_critic_outputs)
+
+        self.actor.compile(optimizer=Adam(learning_rate=alpha), loss="MSE")
         self.critic.compile(optimizer=Adam(learning_rate=beta))
         self.target_actor.compile(optimizer=Adam(learning_rate=alpha))
         self.target_critic.compile(optimizer=Adam(learning_rate=beta))
 
         self.noise = OrnsteinUhlenbeckNoise(mu=np.zeros(n_actions))
-# scale output for final layer instead of passing another layer (for actor)
+
         self.update_network_parameters(tau=1)
 
     def update_network_parameters(self, tau=None):

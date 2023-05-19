@@ -28,11 +28,7 @@ if __name__ == '__main__':
         score = 0
         while not done:
             action, prob, val, action_idx = agent.choose_action(observation)
-<<<<<<< Updated upstream
-            observation_, reward, done, truncated, info = env.step(int(action))
-=======
             observation_, reward, done, truncated, info = env.step(action)
->>>>>>> Stashed changes
 
             n_steps += 1
             score += reward

@@ -1,4 +1,4 @@
-from RL.DDPG.DDPG import Agent
+from RL.DDPG.DDPGGauss import Agent
 from Environments.BruceEnv import BruceEnv
 import numpy as np
 from Environments.AssetClass.BRUCE import Bruce
