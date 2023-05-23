@@ -75,8 +75,8 @@ class Agent(object):
             return
         states, actions, rewards, new_states, dones = self.memory.sample_buffer(self.batch_size)
 
-        state = tf.convert_to_tensor(states, dtype=tf.float32)
-        new_state = tf.convert_to_tensor(new_states, dtype=tf.float32)
+        states = tf.convert_to_tensor(states, dtype=tf.float32)
+        new_states = tf.convert_to_tensor(new_states, dtype=tf.float32)
         actions = tf.convert_to_tensor(actions, dtype=tf.float32)
         rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
 

@@ -3,10 +3,10 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.optimizers import Adam
-from RL.DDPG.Networks import Actor, Critic
-from RL.DDPG.ReplayBuffer import ReplayBuffer
-from RL.DDPG.OUNoise import OrnsteinUhlenbeckNoise
-import RL.DDPG.SGNN as SGNN
+from Networks import Actor, Critic
+from ReplayBuffer import ReplayBuffer
+from OUNoise import OrnsteinUhlenbeckNoise
+import SGNN as SGNN
 
 class Agent(object):
     
@@ -25,22 +25,29 @@ class Agent(object):
         domain_lb = [-np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -10,  -10,  -10,  -1,  -1,  -1,  -1]
         grid_size = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30] 
 
+        domain_ub_c = [np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  np.pi,  10,  10,  10,  1,  1,  1,  1, act_mult, act_mult, act_mult, act_mult, act_mult, act_mult, act_mult, act_mult]
+        domain_lb_c = [-np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -np.pi,  -10,  -10,  -10,  -1,  -1,  -1,  -1, -act_mult, -act_mult, -act_mult, -act_mult, -act_mult, -act_mult, -act_mult, -act_mult]
+        grid_size_c = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30] 
+
         dim = len(domain_ub)
+        dim_c = len(domain_ub_c)
 
         layer_weight_initializers = {dim + 1: tf.initializers.ones()}
+        layer_weight_initializers_c = {dim_c + 1: tf.initializers.ones()}
 
         mu_grid, variance_arr = SGNN.cmptGaussCenterandWidth(domain_lb, domain_ub, grid_size)
+        mu_grid_c, variance_arr_c = SGNN.cmptGaussCenterandWidth(domain_lb_c, domain_ub_c, grid_size_c)
 
         actor = SGNN.GaussianNet(mu_grid, variance_arr, 12, 
                                         weight_initializers=layer_weight_initializers)
 
-        critic = SGNN.GaussianNet(mu_grid, variance_arr, 1, 
+        critic = SGNN.GaussianNet(mu_grid_c, variance_arr_c, 1, 
                                         weight_initializers=layer_weight_initializers)
 
         target_actor = SGNN.GaussianNet(mu_grid, variance_arr, 12,
                                         weight_initializers=layer_weight_initializers)
 
-        target_critic = SGNN.GaussianNet(mu_grid, variance_arr, 1, 
+        target_critic = SGNN.GaussianNet(mu_grid_c, variance_arr_c, 1, 
                                         weight_initializers=layer_weight_initializers)
 
         actor_output = keras.layers.Dense(n_actions, kernel_initializer = layer_weight_initializers[dim+1], activation='tanh')
@@ -50,8 +57,8 @@ class Agent(object):
 
         actor_inputs = tf.keras.layers.Input(shape=(dim,))
         target_actor_inputs = tf.keras.layers.Input(shape=(dim,))
-        critic_inputs = tf.keras.layers.Input(shape=(dim,))
-        target_critic_inputs = tf.keras.layers.Input(shape=(dim,))
+        critic_inputs = tf.keras.layers.Input(shape=(dim+n_actions,))
+        target_critic_inputs = tf.keras.layers.Input(shape=(dim+n_actions,))
 
         actor_outputs = actor(actor_inputs)
         target_actor_outputs = target_actor(target_actor_inputs)
@@ -95,9 +102,9 @@ class Agent(object):
         state = tf.convert_to_tensor([state], dtype=tf.float32)
         actions = self.actor(state)
         if not evaluate:
-            noise = self.noise()
-            mu_prime = actions + noise
-            actions = tf.clip_by_value(mu_prime*self.act_mult, self.min_action, self.max_action)
+            noise = tf.random.normal(shape=[self.n_actions], mean=0.0, stddev=0.1)
+            actions += noise
+            actions = tf.clip_by_value(actions*self.act_mult, self.min_action, self.max_action)
 
         return actions[0]
 
@@ -106,15 +113,20 @@ class Agent(object):
             return
         states, actions, rewards, new_states, dones = self.memory.sample_buffer(self.batch_size)
 
-        state = tf.convert_to_tensor(states, dtype=tf.float32)
-        new_state = tf.convert_to_tensor(new_states, dtype=tf.float32)
+        states = tf.convert_to_tensor(states, dtype=tf.float32)
+        new_states = tf.convert_to_tensor(new_states, dtype=tf.float32)
         actions = tf.convert_to_tensor(actions, dtype=tf.float32)
         rewards = tf.convert_to_tensor(rewards, dtype=tf.float32)
 
         with tf.GradientTape() as tape:
+            #tf.concat([state, action], axis=1) for critic!!!
             target_actions = self.target_actor(new_states)
-            critic_value_ = tf.squeeze(self.target_critic(new_states, target_actions), 1)
-            critic_value = tf.squeeze(self.critic(states, actions), 1)
+            new_critic_input = tf.concat([new_states, target_actions], axis=1)
+
+            critic_value_ = tf.squeeze(self.target_critic(new_critic_input), 1)
+            critic_input = tf.concat([states, actions], axis=1)
+
+            critic_value = tf.squeeze(self.critic(critic_input), 1)
             target = rewards + self.gamma*critic_value_*(1-dones)
             critic_loss = keras.losses.MSE(target, critic_value)
 
@@ -123,7 +135,8 @@ class Agent(object):
 
         with tf.GradientTape() as tape:
             new_policy_actions = self.actor(states)
-            actor_loss = -self.critic(states, new_policy_actions)
+            new_policy_critic = tf.concat([states, new_policy_actions], axis=1)
+            actor_loss = -self.critic(new_policy_critic)
             actor_loss = tf.math.reduce_mean(actor_loss)
 
         actor_network_gradient = tape.gradient(actor_loss, self.actor.trainable_variables)
